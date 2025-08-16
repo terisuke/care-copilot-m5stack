@@ -160,6 +160,16 @@ pip install pandas numpy scikit-learn matplotlib requests
 4. ブランチにプッシュ (`git push origin feature/AmazingFeature`)
 5. プルリクエストを作成
 
+### GitHub Actions設定
+
+#### Claude Code Review (オプション)
+プルリクエストの自動レビューを有効にするには：
+1. [Claude Code](https://claude.ai/code)でOAuthトークンを取得
+2. リポジトリの Settings → Secrets and variables → Actions に移動
+3. `CLAUDE_CODE_OAUTH_TOKEN`として保存
+
+注: 初回PRでは認証エラーが発生することがありますが、これは正常な動作です。
+
 ## 📄 ライセンス
 
 このプロジェクトはMITライセンスの下で公開されています。詳細は[LICENSE](LICENSE)ファイルを参照してください。

@@ -35,6 +35,8 @@ jobs:
         id: claude-review
         uses: anthropics/claude-code-action@beta
         with:
+          # Note: On first PR, authentication may fail. This is expected behavior.
+          # Set up CLAUDE_CODE_OAUTH_TOKEN in repository secrets to enable this feature.
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
 
           # Optional: Specify model (defaults to Claude Sonnet 4, uncomment for Claude Opus 4.1)

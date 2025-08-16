@@ -96,4 +96,5 @@ jobs:
     
     - name: Compile firmware
       run: |
-        arduino-cli compile --fqbn esp32:esp32:m5stack-core-esp32 m5stack-firmware
+        arduino-cli compile --fqbn esp32:esp32:m5stack_core2 m5stack-firmware || \
+        arduino-cli compile --fqbn esp32:esp32:esp32 m5stack-firmware
