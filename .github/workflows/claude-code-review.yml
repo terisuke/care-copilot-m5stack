@@ -34,6 +34,7 @@ jobs:
       - name: Run Claude Code Review
         id: claude-review
         uses: anthropics/claude-code-action@beta
+        continue-on-error: true
         with:
           # Note: On first PR, authentication may fail. This is expected behavior.
           # Set up CLAUDE_CODE_OAUTH_TOKEN in repository secrets to enable this feature.
