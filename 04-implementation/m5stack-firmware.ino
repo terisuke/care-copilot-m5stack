@@ -543,7 +543,7 @@ void updateDisplay() {
     // Header
     M5.Lcd.setTextSize(2);
     M5.Lcd.setCursor(10, 10);
-    M5.Lcd.setTextColor(getAlertColor(systemState.alertLevel));
+    M5.Lcd.setTextColor(getAlertColor(static_cast<AlertLevel>(systemState.alertLevel)));
     M5.Lcd.println("Care Copilot");
     
     // Status indicators
@@ -589,8 +589,8 @@ void updateDisplay() {
     M5.Lcd.setCursor(10, 185);
     M5.Lcd.println("=== Alert Status ===");
     M5.Lcd.setCursor(10, 200);
-    M5.Lcd.setTextColor(getAlertColor(systemState.alertLevel));
-    M5.Lcd.println(getAlertLevelString(systemState.alertLevel));
+    M5.Lcd.setTextColor(getAlertColor(static_cast<AlertLevel>(systemState.alertLevel)));
+    M5.Lcd.println(getAlertLevelString(static_cast<AlertLevel>(systemState.alertLevel)));
     
     // Battery
     M5.Lcd.setTextColor(WHITE);
