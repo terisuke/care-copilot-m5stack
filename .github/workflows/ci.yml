@@ -45,7 +45,7 @@ jobs:
         cache: 'npm'
     
     - name: Install dependencies
-      run: npm ci
+      run: npm install
     
     - name: Run tests
       run: npm test
@@ -89,6 +89,11 @@ jobs:
         arduino-cli lib install "Adafruit BME280 Library"
         arduino-cli lib install "TinyGPSPlus"
     
+    - name: Prepare Arduino sketch
+      run: |
+        mkdir -p m5stack-firmware
+        cp 04-implementation/m5stack-firmware.ino m5stack-firmware/m5stack-firmware.ino
+    
     - name: Compile firmware
       run: |
-        arduino-cli compile --fqbn esp32:esp32:m5stack-core-esp32 04-implementation/m5stack-firmware.ino
+        arduino-cli compile --fqbn esp32:esp32:m5stack-core-esp32 m5stack-firmware
