@@ -52,28 +52,28 @@ pip install requests
 ### センサー接続図
 
 ```
-M5Stack Basic
+M5Stack Fire (Basic V2.7の代替)
 ├── I2C (Port A)
-│   ├── ENV III Unit (0x44/0x76)
-│   └── Ultrasonic Unit (0x57)
+│   ├── ENV IV Unit (0x44/0x76) - ENV III Unitの代替
+│   └── ToF Distance Unit (0x52) - Ultrasonic Unitの代替
 ├── GPIO (Port B)
-│   └── PIR Unit (GPIO 36)
+│   └── PIR Unit (GPIO 36) - 明後日到着予定
 └── UART (Port C)
-    └── GPS Module (RX:16, TX:17)
+    └── GPS Module (RX:16, TX:17) - 未購入
 
-M5StickC Plus2 (携帯用)
+M5StickC Plus2 (携帯用) - 明後日到着予定
 ├── Built-in
 │   ├── IMU (加速度/ジャイロ)
 │   └── RTC (時刻管理)
 └── Hat端子
-    └── GPS Module (外出時装着)
+    └── GPS Module (外出時装着) - 未購入
 ```
 
 ### テストコード例
 
 ```cpp
 // センサー動作確認
-#include <M5Stack.h>
+#include <M5Stack.h>  // M5Stack Fireでも同じライブラリを使用
 #include <Wire.h>
 
 void setup() {
