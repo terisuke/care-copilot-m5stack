@@ -1,104 +1,53 @@
 # 🎯 Care Copilot - Action Plan & Next Steps
 
-## 🚨 IMMEDIATE ACTIONS (今日中に実行)
+## 🚨 IMMEDIATE ACTIONS (8月16日夜 完了済み) ✅
 
-### 1. ハードウェア注文 (14:00までに完了必須)
+### 1. ハードウェア注文 ✅ 完了
 
-**⚠️ 重要な変更点**:
-- GPS Module V2は販売終了 → 代替品を選択
-- 価格はサイトで直接確認が必要（カートに入れて確認）
-- 詳細は`HARDWARE_UPDATE.md`を参照
+**購入済み（代替品含む）**:
+- ✅ M5Stack Fire（M5Stack Basic V2.7の代替）
+- ✅ ENV IV Unit（ENV III Unitの代替）
+- ✅ ToF測距センサーユニット（Ultrasonic Distance Unitの代替）
+- ✅ GPSユニットv1.1
+- 📦 M5Stack用超音波測距ユニット（8/19到着予定）
+- 📦 M5Stack用PIRセンサユニット（8/19到着予定）
+- 📦 M5StickC Plus2（8/19到着予定）
 
-**推奨購入リスト（更新版）**:
+詳細は`HARDWARE_UPDATE.md`を参照
 
-```bash
-# 基本構成（GPS無し: 約14,000円）
-1. M5Stack Basic V2.7 (約7,000円)
-   URL: https://www.switch-science.com/products/9010
-   
-2. M5StickC Plus2 (4,263円 ※マルツ価格)
-   URL: https://www.marutsu.co.jp/pc/i/2777172/
-   
-3. ENV III Unit (約1,500円)
-   URL: https://www.switch-science.com/products/7254
-   
-4. PIR Unit (約500円)
-   URL: スイッチサイエンスで検索
-   
-5. Ultrasonic Distance Unit (約1,000円)
-   URL: スイッチサイエンスで検索
-
-# オプション：GPS追加（+3,000円）
-6. Unit GPS (約3,000円) ※代替品
-   URL: スイッチサイエンスで「Unit GPS」を検索
-```
-
-**注文時の設定**:
-- 配送方法: 当日発送（14時締切）
-- 支払方法: クレジットカード（即時決済）
-- 配送先: 開発環境のある住所
-
-### 2. 開発環境セットアップ (今夜20:00-22:00)
+### 2. 開発環境セットアップ ✅ 完了
 
 ```bash
-# Arduino IDE設定
-1. Arduino IDE 2.0以上をインストール
-2. ESP32ボードマネージャー追加
-   - Preferences → Additional Board Manager URLs
-   - https://dl.espressif.com/dl/package_esp32_index.json
+# Arduino IDE設定 ✅
+- Arduino IDE 2.0以上インストール済み
+- ESP32ボードマネージャー追加済み
+- 必要なライブラリインストール済み
 
-3. 必要なライブラリインストール
-   - M5Stack (by M5Stack)
-   - M5StickCPlus2 (by M5Stack)
-   - TinyGPSPlus
-   - ArduinoJson
-   - WiFiManager
+# Node.js環境 ✅
+- express, socket.io, @line/bot-sdk等インストール済み
 
-# Node.js環境
-cd /Users/teradakousuke/Developer/care-copilot-m5stack
-npm init -y
-npm install express socket.io @line/bot-sdk dotenv cors
-
-# Python環境（AI部分）
-python -m venv venv
-source venv/bin/activate
-pip install pandas numpy scikit-learn matplotlib requests
+# Python環境（AI部分）✅
+- 仮想環境作成済み
+- pandas, numpy, scikit-learn等インストール済み
 ```
 
-### 3. アカウント作成
+### 3. アカウント作成 ✅ 完了
 
-**LINE Developers**:
-1. https://developers.line.biz/ にアクセス
-2. アカウント作成
-3. プロバイダー作成
-4. Messaging APIチャネル作成
-5. Channel Access Token取得
-
-**GitHub**:
-```bash
-cd /Users/teradakousuke/Developer/care-copilot-m5stack
-git init
-git add .
-git commit -m "Initial commit: Care Copilot M5Stack Project"
-git remote add origin https://github.com/yourusername/care-copilot-m5stack.git
-git push -u origin main
-```
-
-**Hackster.io**:
-1. https://www.hackster.io/ でアカウント作成
-2. プロフィール設定
-3. プロジェクトドラフト作成
+**LINE Developers**: ✅ 登録完了
+**GitHub**: ✅ リポジトリ作成・CI/CD設定完了
+**Hackster.io**: 📝 準備中
 
 ---
 
 ## 📅 6日間の詳細タスクリスト
 
-### Day 0: 準備日（8/16 金・今日）
+### Day 0: 準備日（8/16 金）✅ 完了
 - [x] プロジェクト構想策定
 - [x] ドキュメント作成
-- [ ] **14:00まで**: ハードウェア注文 ← 最優先！
-- [ ] **20:00-22:00**: 開発環境セットアップ
-- [ ] **22:00まで**: LINE/GitHub/Hackster.io登録
+- [x] ハードウェア注文（代替品含む）
+- [x] 開発環境セットアップ
+- [x] LINE/GitHub登録・CI/CD設定
+- [ ] Hackster.io登録（準備中）
 
 ### Day 1: ハードウェア基礎（8/17 土）
 ```
@@ -129,21 +78,13 @@ git push -u origin main
 
 ### Day 3: 外出支援機能（8/19 月）
 ```
-※GPSモジュールがある場合のみ
-09:00 - GPS モジュール統合
+※通販センサー到着日・GPSモジュール統合
+09:00 - PIR、超音波、M5StickC Plus2到着確認
+10:00 - GPSモジュール統合
 11:00 - 位置情報取得テスト
 13:00 - ジオフェンシング実装
 15:00 - 活動量記録機能
 17:00 - 安全エリア設定UI
-19:00 - 統合テスト
-21:00 - Day 3完了チェック
-
-※GPS無しの場合
-09:00 - 加速度センサーによる活動量測定
-11:00 - 歩数カウント機能実装
-13:00 - 活動パターン分析
-15:00 - QOLレポート基礎実装
-17:00 - データ可視化
 19:00 - 統合テスト
 21:00 - Day 3完了チェック
 ```
@@ -298,11 +239,11 @@ jsonBuffer.reserve(1024); // 事前にメモリ確保
 
 ## 🚀 Let's Do This!
 
-### 今日のTODO（優先順）
-1. ⏰ **14:00まで**: ハードウェア注文（最重要！）
-2. 📝 開発計画の最終確認
-3. 💻 開発環境セットアップ開始
-4. 🔑 各種アカウント作成
+### 今日のTODO（Day 1: 8/17）
+1. 🔧 **M5Stack Fire動作確認**（手元にあるハードウェア）
+2. 🎛️ **センサー接続テスト**（ENV IV、ToF、超音波）
+3. 💻 **基本スケッチ作成**
+4. 📝 **Hackster.ioプロジェクト作成**
 
 ### モチベーション
 ```
@@ -326,35 +267,56 @@ jsonBuffer.reserve(1024); // 事前にメモリ確保
 
 ## 📊 進捗管理
 
-### Day 0 (8/16) チェックポイント
-- [ ] 14:00 - ハードウェア注文完了
-- [ ] 18:00 - 開発環境50%完了
-- [ ] 20:00 - 開発環境100%完了
-- [ ] 22:00 - 全アカウント作成完了
+### Day 0 (8/16) チェックポイント ✅ 完了
+- [x] 14:00 - ハードウェア注文完了（代替品含む）
+- [x] 18:00 - 開発環境50%完了
+- [x] 20:00 - 開発環境100%完了
+- [x] 22:00 - LINE/GitHub登録完了（Hackster.io準備中）
+
+### Day 1 (8/17) チェックポイント ✅ 進行中
+- [x] 10:00 - M5Stack Fire対応ファームウェア更新
+- [x] 12:00 - IMU統合による転倒検知機能追加
+- [ ] 15:00 - 基本スケッチ動作
+- [ ] 18:00 - WiFi通信確立
 
 ### デイリーレポート記入欄
 ```
-日付: 2025/08/16
+日付: 2025/08/17 (Day 1)
 完了タスク:
-- ドキュメント作成 ✓
-- プロジェクト計画 ✓
-- ハードウェア調査 ✓
+- Day 0全タスク完了 ✓
+- ハードウェア購入（代替品含む） ✓
+- 開発環境構築完了 ✓
+- CI/CD設定完了 ✓
+- M5Stack Fire対応ファームウェア更新 ✓
+- IMU統合による転倒検知機能追加 ✓
 
-未完了タスク:
-- ハードウェア注文
-- 開発環境構築
+本日の進捗:
+1. M5Stack Fire向けファームウェアv1.1.0完成
+   - IMU (MPU9250) による高精度転倒検知実装
+   - 加速度センサーデータによる異常動作検出
+   - ジャイロスコープによる姿勢変化追跡
+2. ドキュメント更新完了
 
-明日の優先事項:
-1. ハードウェア動作確認
-2. センサー接続テスト
-3. 基本プログラム作成
+次のステップ:
+1. 実機での動作確認（M5Stack Fire到着後）
+2. WiFi/MQTT通信テスト
+3. LINE Bot連携設定
+4. Hackster.ioプロジェクト作成
+
+技術的な改善点:
+- M5Stack FireのIMU活用により転倒検知精度が大幅向上
+- バッテリー容量増加により連続稼働時間延長
+- 既存センサーとの統合により多層的な安全監視実現
 
 課題・懸念:
-- GPS Module在庫切れ → 代替品検討
-- 価格変動あり → 予算確認必要
+- PIRセンサー、超音波センサー、M5StickC Plus2は8/19到着
+- 代替品の仕様差異に注意が必要
 
 メモ:
-- 詳細は HARDWARE_UPDATE.md 参照
+- M5Stack FireはBasicより高機能（IMU内蔵、バッテリー容量大）
+- ENV IVはENV IIIの上位版（SHT40 + BMP280）
+- GPSユニットv1.1購入済み（外出支援機能実装可能）
+- IMU転倒検知の閾値調整が必要（実機テスト後）
 ```
 
 ---

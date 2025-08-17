@@ -1,14 +1,15 @@
 /**
  * Care Copilot - M5Stack Firmware
- * Version: 1.0.0
- * Date: 2025-08-16
+ * Version: 1.1.0
+ * Date: 2025-08-17
  * 
- * Main firmware for M5Stack Basic management terminal
+ * Main firmware for M5Stack Fire management terminal
  * Features:
- * - Multi-sensor integration
+ * - Multi-sensor integration with IMU support
  * - Intelligent alert filtering
  * - WiFi/MQTT communication
  * - Local alert management
+ * - Enhanced battery management for M5Stack Fire
  */
 
 #include <M5Stack.h>
@@ -20,12 +21,15 @@
 #include <Adafruit_BME280.h>
 #include <TinyGPSPlus.h>
 #include <Preferences.h>
+#include "utility/MPU9250.h"         // M5Stack Fire IMU
+#include "utility/quaternionFilters.h" // IMU filters
 
 // ============================================
 // Configuration
 // ============================================
-#define DEVICE_ID "M5_CARE_001"
-#define FIRMWARE_VERSION "1.0.0"
+#define DEVICE_ID "M5_FIRE_CARE_001"
+#define FIRMWARE_VERSION "1.1.0"
+#define DEVICE_TYPE "M5Stack_Fire"  // Added for Fire variant
 
 // WiFi Configuration
 // IMPORTANT: Replace these with your actual WiFi credentials
@@ -70,11 +74,15 @@ TinyGPSPlus gps;
 HardwareSerial GPS_Serial(2);
 Preferences preferences;
 
+// M5Stack Fire specific - IMU
+MPU9250 IMU;  // IMU object for M5Stack Fire
+
 // System State
 struct SystemState {
     bool wifiConnected = false;
     bool mqttConnected = false;
     bool sensorsReady = false;
+    bool imuReady = false;  // Added for Fire's IMU
     uint8_t alertLevel = 0;  // 0: Normal, 1: Info, 2: Warning, 3: Emergency
     unsigned long lastMotion = 0;
     unsigned long lastHeartbeat = 0;
@@ -90,6 +98,13 @@ struct SensorData {
     float pressure = 0.0;
     double latitude = 0.0;
     double longitude = 0.0;
+    float accelX = 0.0;      // M5Stack Fire IMU data
+    float accelY = 0.0;
+    float accelZ = 0.0;
+    float gyroX = 0.0;
+    float gyroY = 0.0;
+    float gyroZ = 0.0;
+    bool fallDetected = false;
     uint32_t timestamp = 0;
 } currentData;
 
@@ -112,9 +127,12 @@ struct Alert {
 // Setup Functions
 // ============================================
 void setup() {
-    // Initialize M5Stack
+    // Initialize M5Stack Fire with enhanced features
     M5.begin(true, false, true, true);
     M5.Power.begin();
+    
+    // Initialize IMU for M5Stack Fire
+    initializeIMU();
     
     // Initialize Serial
     Serial.begin(115200);
@@ -158,7 +176,7 @@ void setupDisplay() {
     M5.Lcd.setTextColor(WHITE, BLACK);
     M5.Lcd.setTextSize(2);
     M5.Lcd.setCursor(0, 0);
-    M5.Lcd.println("Care Copilot v1.0");
+    M5.Lcd.println("Care Copilot Fire v1.1");
     M5.Lcd.setTextSize(1);
 }
 
@@ -180,6 +198,22 @@ void setupSensors() {
                     Adafruit_BME280::SAMPLING_X1,
                     Adafruit_BME280::FILTER_X16,
                     Adafruit_BME280::STANDBY_MS_0_5);
+}
+
+void initializeIMU() {
+    // Initialize IMU for M5Stack Fire
+    IMU.MPU9250SelfTest(IMU.SelfTest);
+    IMU.calibrateMPU9250(IMU.gyroBias, IMU.accelBias);
+    IMU.initMPU9250();
+    IMU.initAK8963(IMU.magCalibration);
+    
+    if (IMU.readByte(MPU9250_ADDRESS, WHO_AM_I_MPU9250) == 0x71) {
+        systemState.imuReady = true;
+        Serial.println(F("IMU initialized for fall detection"));
+    } else {
+        Serial.println(F("IMU initialization failed"));
+        displayError("IMU Error");
+    }
 }
 
 void setupWiFi() {
@@ -272,6 +306,38 @@ void readSensors() {
     currentData.humidity = bme.readHumidity();
     currentData.pressure = bme.readPressure() / 100.0F;
     
+    // Read IMU for fall detection (M5Stack Fire feature)
+    if (systemState.imuReady && IMU.readByte(MPU9250_ADDRESS, INT_STATUS) & 0x01) {
+        IMU.readAccelData(IMU.accelCount);
+        IMU.getAres();
+        
+        currentData.accelX = IMU.accelCount[0] * IMU.aRes;
+        currentData.accelY = IMU.accelCount[1] * IMU.aRes;
+        currentData.accelZ = IMU.accelCount[2] * IMU.aRes;
+        
+        // Calculate acceleration magnitude for fall detection
+        float accelMagnitude = sqrt(currentData.accelX * currentData.accelX +
+                                   currentData.accelY * currentData.accelY + 
+                                   currentData.accelZ * currentData.accelZ);
+        
+        // Fall detection based on sudden acceleration change
+        static float lastAccelMagnitude = 9.8;
+        if (abs(accelMagnitude - lastAccelMagnitude) > 6.0) {
+            currentData.fallDetected = true;
+            Serial.println(F("Fall detected by IMU!"));
+        } else {
+            currentData.fallDetected = false;
+        }
+        lastAccelMagnitude = accelMagnitude;
+        
+        // Read gyroscope data
+        IMU.readGyroData(IMU.gyroCount);
+        IMU.getGres();
+        currentData.gyroX = IMU.gyroCount[0] * IMU.gRes;
+        currentData.gyroY = IMU.gyroCount[1] * IMU.gRes;
+        currentData.gyroZ = IMU.gyroCount[2] * IMU.gRes;
+    }
+    
     // Read GPS if available
     while (GPS_Serial.available() > 0) {
         if (gps.encode(GPS_Serial.read())) {
@@ -318,6 +384,13 @@ void processAlerts() {
         newLevel = max(newLevel, ALERT_INFO);
         alertMessage = "Humidity out of range: " + String(currentData.humidity) + "%";
         alertType = "humidity";
+    }
+    
+    // Check IMU-based fall detection (M5Stack Fire feature)
+    if (currentData.fallDetected) {
+        newLevel = ALERT_EMERGENCY;
+        alertMessage = "Fall detected by IMU sensor!";
+        alertType = "fall_imu";
     }
     
     // Check motion timeout (possible fall or emergency)

@@ -52,21 +52,23 @@ pip install requests
 ### センサー接続図
 
 ```
-M5Stack Fire (Basic V2.7の代替)
+M5Stack Fire (Basic V2.7の代替) - 購入済み
 ├── I2C (Port A)
-│   ├── ENV IV Unit (0x44/0x76) - ENV III Unitの代替
-│   └── ToF Distance Unit (0x52) - Ultrasonic Unitの代替
+│   ├── ENV IV Unit (0x44/0x76) - ENV III Unitの代替・購入済み
+│   └── ToF測距センサーユニット (0x52) - Ultrasonic Unitの代替・購入済み
 ├── GPIO (Port B)
-│   └── PIR Unit (GPIO 36) - 明後日到着予定
-└── UART (Port C)
-    └── GPS Module (RX:16, TX:17) - 未購入
+│   └── PIRセンサーユニット (GPIO 36) - 8/19到着予定
+├── UART (Port C)
+│   └── GPSユニットv1.1 (RX:16, TX:17) - 購入済み
+└── 追加センサー
+    └── 超音波測距ユニット - 8/19到着予定
 
-M5StickC Plus2 (携帯用) - 明後日到着予定
+M5StickC Plus2 (携帯用) - 8/19到着予定
 ├── Built-in
 │   ├── IMU (加速度/ジャイロ)
 │   └── RTC (時刻管理)
 └── Hat端子
-    └── GPS Module (外出時装着) - 未購入
+    └── GPSユニットv1.1併用可能
 ```
 
 ### テストコード例
