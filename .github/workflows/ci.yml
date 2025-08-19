@@ -84,16 +84,17 @@ jobs:
     
     - name: Install libraries
       run: |
-        arduino-cli lib install "M5Stack"
+        arduino-cli lib install "M5Unified"
         arduino-cli lib install "PubSubClient"
         arduino-cli lib install "ArduinoJson"
-        arduino-cli lib install "Adafruit BME280 Library"
-        arduino-cli lib install "TinyGPSPlus"
+        arduino-cli lib install "VL53L1X"
+        arduino-cli lib install "M5Unit-ENV"
+        arduino-cli lib install "TinyGPSPlus-ESP32"
     
     - name: Prepare Arduino sketch
       run: |
         mkdir -p m5stack-firmware
-        cp 04-implementation/m5stack-firmware.ino m5stack-firmware/m5stack-firmware.ino
+        cp 04-implementation/m5stack-fire-unified-all/m5stack-fire-unified-all.ino m5stack-firmware/m5stack-firmware.ino
     
     - name: Compile firmware
       run: |

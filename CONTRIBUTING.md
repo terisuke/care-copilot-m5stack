@@ -5,7 +5,7 @@ Thank you for your interest in contributing to the Care Copilot project! This do
 ## Getting Started
 
 1. Fork the repository
-2. Clone your fork: `git clone https://github.com/your-username/care-copilot-m5stack.git`
+2. Clone your fork: `git clone https://github.com/terisuke/care-copilot-m5stack.git`
 3. Create a feature branch: `git checkout -b feature/your-feature-name`
 4. Make your changes
 5. Commit your changes: `git commit -m 'Add some feature'`

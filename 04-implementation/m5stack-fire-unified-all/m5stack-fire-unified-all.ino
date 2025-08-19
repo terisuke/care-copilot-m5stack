@@ -12,17 +12,20 @@
 #include "M5UnitENV.h"    // ENV.4 sensor
 #include <TinyGPSPlus.h>
 
-// 設定
-#define DEVICE_ID "M5_FIRE_ALL_SENSORS"
-#define FIRMWARE_VERSION "3.0.0"
+// Configuration - create config_local.h with your settings
+#if __has_include("config_local.h")
+  #include "config_local.h"
+#else
+  #include "config.h"
+#endif
 
-// WiFi設定
-const char *ssid = "your-wifi-ssid";
-const char *password = "your-wifi-password";
+// WiFi設定 (config.hから読み込み)
+const char *ssid = WIFI_SSID;
+const char *password = WIFI_PASSWORD;
 
-// MQTT設定
-const char* mqtt_server = "test.mosquitto.org";
-const int mqtt_port = 1883;
+// MQTT設定 (config.hから読み込み)
+const char* mqtt_server = MQTT_SERVER;
+const int mqtt_port = MQTT_PORT;
 
 // MQTTトピック
 const char* TOPIC_SENSOR_DATA = "care/sensor/data";
@@ -32,19 +35,16 @@ const char* TOPIC_LOCATION = "care/location";
 const char* TOPIC_ALERT = "care/alert";
 const char* TOPIC_STATUS = "care/status";
 
-// センサーしきい値
-const float FALL_THRESHOLD = 2.5;
-const int DISTANCE_NEAR = 500;    // 50cm - 接近警告
-const int DISTANCE_FAR = 2000;    // 2m - 離床検知
-const int DISTANCE_MAX = 4000;    // 4m - 最大測定距離
-const float TEMP_HIGH = 35.0;     // 高温警告
-const float TEMP_LOW = 15.0;      // 低温警告
-const float HUMIDITY_HIGH = 80.0; // 高湿度警告
-const float HUMIDITY_LOW = 30.0;  // 低湿度警告
+// センサーしきい値はconfig.hで定義
 
 // グローバル変数
 WiFiClient espClient;
 PubSubClient mqtt(espClient);
+
+// PubSubClientのバッファサイズを増やす（デフォルト256）
+void setupMqttBuffer() {
+    mqtt.setBufferSize(1024);  // JSONメッセージ用に拡大
+}
 VL53L1X tof_sensor;  // ToF sensor
 SHT4X sht4;          // 温湿度センサー
 BMP280 bmp;          // 気圧センサー
@@ -190,7 +190,7 @@ void setup() {
         Serial.print(baudNames[i]);
         Serial.print(" bps... ");
         
-        gpsSerial.begin(baudRates[i], SERIAL_8N1, 16, 17);
+        gpsSerial.begin(baudRates[i], SERIAL_8N1, GPS_RX_PIN, GPS_TX_PIN);
         delay(500);
         
         String testData = "";
@@ -216,22 +216,29 @@ void setup() {
     }
     
     if (gpsDetected) {
-        gpsSerial.begin(correctBaud, SERIAL_8N1, 16, 17);
+        gpsSerial.begin(correctBaud, SERIAL_8N1, GPS_RX_PIN, GPS_TX_PIN);
         systemState.gpsConnected = true;
         Serial.println("\nGPS initialized at " + String(correctBaud) + " bps");
         M5.Display.println("GPS OK: " + String(correctBaud));
     } else {
         Serial.println("\nWARNING: GPS not detected or wrong baud rate");
         Serial.println("Using default 9600 bps");
-        gpsSerial.begin(9600, SERIAL_8N1, 16, 17);
+        gpsSerial.begin(GPS_BAUD_RATE, SERIAL_8N1, GPS_RX_PIN, GPS_TX_PIN);
     }
     
     // WiFi接続
     setupWiFi();
     
     // MQTT設定
+    setupMqttBuffer();  // バッファサイズ設定
     mqtt.setServer(mqtt_server, mqtt_port);
     mqtt.setCallback(mqttCallback);
+    
+    // MQTT初回接続試行
+    if (systemState.wifiConnected) {
+        Serial.println("\nAttempting initial MQTT connection...");
+        reconnectMQTT();
+    }
     
     // 起動音
     M5.Speaker.tone(523, 200);
@@ -267,49 +274,56 @@ void loop() {
     }
     
     // MQTT維持
-    if (systemState.wifiConnected && !mqtt.connected()) {
-        reconnectMQTT();
-    }
-    if (mqtt.connected()) {
-        mqtt.loop();
-        systemState.mqttConnected = true;
+    if (systemState.wifiConnected) {
+        if (!mqtt.connected()) {
+            systemState.mqttConnected = false;
+            static unsigned long lastReconnectAttempt = 0;
+            unsigned long now = millis();
+            if (now - lastReconnectAttempt > 5000) {  // 5秒ごとに再接続試行
+                lastReconnectAttempt = now;
+                reconnectMQTT();
+            }
+        } else {
+            mqtt.loop();
+            systemState.mqttConnected = true;
+        }
     }
     
-    // IMUセンサー読み取り（100ms間隔）
-    if (millis() - lastSensorRead > 100) {
+    // IMUセンサー読み取り
+    if (millis() - lastSensorRead > IMU_READ_INTERVAL) {
         readIMU();
         checkFallDetection();
         lastSensorRead = millis();
     }
     
-    // ToFセンサー読み取り（200ms間隔）
-    if (millis() - lastToFRead > 200) {
+    // ToFセンサー読み取り
+    if (millis() - lastToFRead > TOF_READ_INTERVAL) {
         readToF();
         checkDistanceAlerts();
         lastToFRead = millis();
     }
     
-    // ENV.4センサー読み取り（2秒間隔）
-    if (millis() - lastEnvRead > 2000) {
+    // ENV.4センサー読み取り
+    if (millis() - lastEnvRead > ENV_READ_INTERVAL) {
         readEnv4();
         checkEnvironmentAlerts();
         lastEnvRead = millis();
     }
     
-    // GPS読み取り（1秒間隔）
-    if (millis() - lastGpsRead > 1000) {
+    // GPS読み取り
+    if (millis() - lastGpsRead > GPS_READ_INTERVAL) {
         readGPS();
         lastGpsRead = millis();
     }
     
-    // MQTT送信（5秒間隔）
-    if (millis() - lastMqttPublish > 5000 && systemState.mqttConnected) {
+    // MQTT送信
+    if (millis() - lastMqttPublish > MQTT_PUBLISH_INTERVAL && systemState.mqttConnected) {
         publishSensorData();
         lastMqttPublish = millis();
     }
     
-    // 画面更新（1秒間隔）
-    if (millis() - lastDisplayUpdate > 1000) {
+    // 画面更新
+    if (millis() - lastDisplayUpdate > DISPLAY_UPDATE_INTERVAL) {
         updateDisplay();
         lastDisplayUpdate = millis();
     }
@@ -523,7 +537,7 @@ void checkDistanceAlerts() {
     }
     
     // 長時間動きなし検知
-    if (millis() - lastMotionTime > 600000 && !sensorData.motionDetected) {  // 10分
+    if (millis() - lastMotionTime > NO_MOTION_TIMEOUT && !sensorData.motionDetected) {
         systemState.alertLevel = 1;
         systemState.alertMessage = "No motion for 10min";
     }
@@ -585,11 +599,41 @@ void setupWiFi() {
 
 void reconnectMQTT() {
     if (!mqtt.connected()) {
+        Serial.print("Attempting MQTT connection to ");
+        Serial.print(mqtt_server);
+        Serial.print(":");
+        Serial.print(mqtt_port);
+        Serial.print("...");
+        
         String clientId = "M5Fire-" + String(random(0xffff), HEX);
+        
+        // タイムアウトを短くして、接続試行
+        mqtt.setSocketTimeout(5);  // 5秒でタイムアウト
+        
         if (mqtt.connect(clientId.c_str())) {
             systemState.mqttConnected = true;
-            Serial.println("MQTT Connected!");
+            Serial.println(" Connected!");
+            Serial.println("Client ID: " + clientId);
             mqtt.subscribe("care/command/+");
+        } else {
+            systemState.mqttConnected = false;
+            Serial.print(" Failed, rc=");
+            Serial.print(mqtt.state());
+            Serial.println(" retry in 5 seconds");
+            
+            // MQTTエラーコードの説明
+            switch(mqtt.state()) {
+                case -4: Serial.println("MQTT_CONNECTION_TIMEOUT"); break;
+                case -3: Serial.println("MQTT_CONNECTION_LOST"); break;
+                case -2: Serial.println("MQTT_CONNECT_FAILED"); break;
+                case -1: Serial.println("MQTT_DISCONNECTED"); break;
+                case 0: Serial.println("MQTT_CONNECTED"); break;
+                case 1: Serial.println("MQTT_CONNECT_BAD_PROTOCOL"); break;
+                case 2: Serial.println("MQTT_CONNECT_BAD_CLIENT_ID"); break;
+                case 3: Serial.println("MQTT_CONNECT_UNAVAILABLE"); break;
+                case 4: Serial.println("MQTT_CONNECT_BAD_CREDENTIALS"); break;
+                case 5: Serial.println("MQTT_CONNECT_UNAUTHORIZED"); break;
+            }
         }
     }
 }
@@ -683,7 +727,8 @@ void sendAlert(int level, String message) {
 // ============================================
 void handleButtons() {
     if (M5.BtnA.wasPressed()) {
-        sendAlert(1, "Test alert - Button A");
+        // テスト用にレベル2に変更（LINE通知が送信される）
+        sendAlert(2, "Test alert - Button A (Level 2)");
     }
     
     if (M5.BtnB.wasPressed()) {
@@ -700,6 +745,7 @@ void handleButtons() {
 void updateDisplay() {
     M5.Display.clear();
     M5.Display.setCursor(0, 0);
+    M5.Display.setTextSize(2);
     
     // タイトル
     M5.Display.setTextColor(TFT_CYAN);
@@ -732,40 +778,62 @@ void updateDisplay() {
     M5.Display.println(sensorData.gpsValid ? "OK" : "..");
     M5.Display.setTextColor(TFT_WHITE);
     
+    // IMU状態（転倒検知）
+    M5.Display.print("\nIMU: ");
+    if (sensorData.fallDetected) {
+        M5.Display.setTextColor(TFT_RED);
+        M5.Display.println("FALL DETECTED!");
+    } else {
+        M5.Display.setTextColor(TFT_GREEN);
+        M5.Display.println("Normal");
+    }
+    M5.Display.setTextColor(TFT_WHITE);
+    
     // ToFデータ
     if (systemState.tofConnected) {
-        M5.Display.println("\n-- Distance --");
-        M5.Display.println(String(sensorData.distance) + "mm [" + sensorData.zoneStatus + "]");
+        M5.Display.println("\nDist: " + String(sensorData.distance) + "mm");
+        M5.Display.println("Zone: " + sensorData.zoneStatus);
     }
     
     // ENV.4データ
     if (systemState.env4Connected) {
-        M5.Display.println("\n-- Environment --");
-        M5.Display.println("T:" + String(sensorData.temperature, 1) + "C H:" + 
+        M5.Display.println("\nT:" + String(sensorData.temperature, 1) + "C H:" + 
                           String(sensorData.humidity, 1) + "%");
     }
     
-    // GPSデータ
-    M5.Display.println("\n-- GPS --");
+    // GPSデータ（コンパクト表示）
     if (sensorData.gpsValid) {
-        M5.Display.println("Lat:" + String(sensorData.latitude, 5));
-        M5.Display.println("Lng:" + String(sensorData.longitude, 5));
+        M5.Display.println("\nGPS: Fixed");
         M5.Display.println("Sat:" + String(sensorData.satellites));
     } else {
-        M5.Display.println("Searching...");
+        M5.Display.println("\nGPS: Searching");
         M5.Display.println("Sat:" + String(sensorData.satellites));
     }
     
-    // アラート
+    // アラート（画面中央に大きく表示）
     if (systemState.alertLevel > 0) {
+        M5.Display.setCursor(10, 140);
         M5.Display.setTextColor(systemState.alertLevel >= 2 ? TFT_RED : TFT_YELLOW);
-        M5.Display.println("\nALERT: " + systemState.alertMessage);
+        M5.Display.setTextSize(2);
+        M5.Display.println("*** ALERT ***");
+        M5.Display.setCursor(10, 160);
+        M5.Display.setTextSize(1);
+        M5.Display.println(systemState.alertMessage);
+        M5.Display.setTextSize(2);
         M5.Display.setTextColor(TFT_WHITE);
     }
     
-    // バッテリーとボタン
-    M5.Display.setCursor(0, 210);
-    M5.Display.println("Bat:" + String(sensorData.batteryLevel) + "%");
+    // バッテリーとMQTT状態（最下部に固定）
+    M5.Display.setCursor(0, 195);
+    M5.Display.setTextSize(1);
+    M5.Display.println("Bat:" + String(sensorData.batteryLevel) + "% MQTT:" + mqtt_server);
+    if (!systemState.mqttConnected) {
+        M5.Display.setTextColor(TFT_YELLOW);
+        M5.Display.println("Retrying MQTT connection...");
+        M5.Display.setTextColor(TFT_WHITE);
+    }
+    M5.Display.setCursor(0, 220);
+    M5.Display.setTextSize(2);
     M5.Display.println("[A]Alert [B]Clear [C]Info");
 }
 
