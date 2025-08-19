@@ -4,34 +4,30 @@
 
 ### 必要なソフトウェア
 
-#### Arduino IDE設定
+#### Arduino IDE設定 【✅ 実装完了】
 ```bash
 # Arduino IDE 2.0以上をインストール
-# ボードマネージャーでESP32を追加
-https://dl.espressif.com/dl/package_esp32_index.json
+# ボードマネージャーURLを追加
+https://m5stack.oss-cn-shenzhen.aliyuncs.com/resource/arduino/package_m5stack_index.json
 
-# 必要なライブラリ
-- M5Stack (by M5Stack)
-- M5StickCPlus2 (by M5Stack)
-- TinyGPSPlus (GPS処理)
-- ArduinoJson (データ処理)
-- WiFiManager (WiFi設定)
-- HTTPClient (API通信)
+# 使用ライブラリ（実装済み）
+- M5Unified (統一API) ✅
+- VL53L1X (ToF4M用) ✅  
+- TinyGPSPlus (GPS処理) ✅
+- ArduinoJson (データ処理) ✅
+- PubSubClient (MQTT通信) ✅
 ```
 
-#### Node.js バックエンド
+#### Node.js バックエンド 【✅ 実装完了】
 ```bash
-# プロジェクト初期化
-npm init -y
+# 実装済みパッケージ
+npm install express ✅
+npm install @line/bot-sdk ✅
+npm install mqtt ✅
+npm install dotenv ✅
+npm install cors ✅
 
-# 必要なパッケージ
-npm install express socket.io
-npm install @line/bot-sdk
-npm install dotenv cors
-npm install node-cron  # 定期処理用
-
-# 開発用
-npm install -D nodemon
+# backend-line-messaging.jsで全機能統合済み
 ```
 
 #### Python AI部分
@@ -49,52 +45,53 @@ pip install requests
 
 ## 🔧 Day 1: ハードウェア基礎実装
 
-### センサー接続図
+### センサー接続図 【✅ 実装完了】
 
 ```
-M5Stack Fire (Basic V2.7の代替) - 購入済み
-├── I2C (Port A)
-│   ├── ENV IV Unit (0x44/0x76) - ENV III Unitの代替・購入済み
-│   └── ToF測距センサーユニット (0x52) - Ultrasonic Unitの代替・購入済み
-├── GPIO (Port B)
-│   └── PIRセンサーユニット (GPIO 36) - 8/19到着予定
-├── UART (Port C)
-│   └── GPSユニットv1.1 (RX:16, TX:17) - 購入済み
-└── 追加センサー
-    └── 超音波測距ユニット - 8/19到着予定
+M5Stack Fire - ✅ 実装完了
+├── Port A (I2C): I2Cハブ経由
+│   ├── ToF4M (0x29) ✅
+│   └── ENV.4 Unit
+│       ├── SHT4X (0x44) ✅
+│       └── BMP280 (0x76) ✅
+├── Port C (UART)
+│   └── GPS Module ✅
+└── 内蔵
+    └── IMU (6軸) ✅
 
-M5StickC Plus2 (携帯用) - 8/19到着予定
-├── Built-in
-│   ├── IMU (加速度/ジャイロ)
-│   └── RTC (時刻管理)
-└── Hat端子
-    └── GPSユニットv1.1併用可能
+■ 動作確認済みセンサー値:
+- IMU: 転倒検知動作中
+- ToF4M: 40mm～4000mm測定中  
+- ENV.4: 温度/湿度/気圧取得中
+- GPS: 16衛星捕捉、位置特定中
 ```
 
-### テストコード例
+### 実装コード例 【✅ 動作確認済み】
 
 ```cpp
-// センサー動作確認
-#include <M5Stack.h>  // M5Stack Fireでも同じライブラリを使用
-#include <Wire.h>
+// M5Unifiedを使用した統合実装
+#include <M5Unified.h>
+#include <VL53L1X.h>  // ToF4M用
+#include <TinyGPSPlus.h>  // GPS用
+#include <PubSubClient.h>  // MQTT用
 
 void setup() {
-    M5.begin();
+    auto cfg = M5.config();
+    M5.begin(cfg);
+    
+    // I2Cハブ経由でセンサー初期化
     Wire.begin();
     
-    // PIRセンサー初期化
-    pinMode(36, INPUT);
+    // MQTT接続
+    client.setServer("broker.hivemq.com", 1883);
     
-    M5.Lcd.println("Sensor Test Starting...");
+    M5.Display.println("システム起動中...");
 }
 
 void loop() {
-    // PIR読み取り
-    int motion = digitalRead(36);
-    if(motion == HIGH) {
-        M5.Lcd.fillScreen(RED);
-        M5.Lcd.println("Motion Detected!");
-        delay(1000);
+    // IMUデータ取得と転倒検知
+    if(detectFall()) {
+        sendMqttAlert(EMERGENCY, "転倒検知");
     }
     
     M5.update();

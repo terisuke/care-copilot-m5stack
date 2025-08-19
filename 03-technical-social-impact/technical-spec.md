@@ -32,7 +32,7 @@
 
 ## 🎯 Hardware Specifications
 
-### Primary Device: M5Stack Fire v1.1
+### Primary Device: M5Stack Fire
 ```yaml
 Processor:
   - Type: ESP32 Dual-Core
@@ -45,18 +45,18 @@ Display:
   - Resolution: 320x240
   - Color: 16-bit (65K colors)
   
-IMU (NEW):
-  - Model: MPU9250
+IMU (内蔵):
+  - Model: MPU6886
   - Features:
     - 3-axis Accelerometer (±16g)
     - 3-axis Gyroscope (±2000 dps)
-    - 3-axis Magnetometer
   - Application: Fall detection, Activity monitoring
+  - 実装状態: ✅ 転倒検知動作中
 
 Battery:
-  - Capacity: 500mAh (Enhanced)
+  - Capacity: 500mAh
   - Charging: USB Type-C
-  - Runtime: 8-10 hours continuous
+  - Runtime: 8+ hours (実測値)
 
 Connectivity:
   - WiFi: 802.11 b/g/n
@@ -100,12 +100,13 @@ Special Features:
 
 ### Environmental Monitoring
 ```yaml
-ENV IV Unit:
-  - Temperature: SHT40 (±0.2°C)
-  - Humidity: SHT40 (±1.8% RH)
+ENV.4 Unit:
+  - Temperature: SHT4X (±0.2°C)
+  - Humidity: SHT4X (±2% RH) 
   - Pressure: BMP280 (±1 hPa)
   - Interface: I2C (0x44, 0x76)
   - Update Rate: 1Hz
+  - 実装状態: ✅ 動作確認済み
 ```
 
 ### Motion Detection
@@ -120,12 +121,13 @@ PIR Sensor:
 
 ### Distance Measurement
 ```yaml
-ToF Sensor:
-  - Model: VL53L0X
-  - Range: 30-2000mm
-  - Accuracy: ±3%
+ToF4M Sensor:
+  - Model: VL53L1X
+  - Range: 40-4000mm
+  - Accuracy: ±5mm
   - Update Rate: 50Hz
   - Interface: I2C (0x29)
+  - 実装状態: ✅ 動作確認済み
 
 Ultrasonic (Backup):
   - Model: HC-SR04
@@ -136,54 +138,57 @@ Ultrasonic (Backup):
 
 ### Location Tracking
 ```yaml
-GPS Unit v1.1:
-  - Chipset: NEO-M8N
-  - Channels: 72
-  - Accuracy: 2.5m CEP
+GPS Module:
+  - Chipset: AT6558
+  - Satellites: 16+ 捕捉
+  - Accuracy: ±5m (屋外)
   - Update Rate: 10Hz
-  - Cold Start: <30s
-  - Interface: UART
+  - Cold Start: 30s-2min
+  - Interface: UART (Port C)
+  - Baud: 自動検出
+  - 実装状態: ✅ 動作確認済み
 ```
 
 ## 💻 Software Architecture
 
-### Firmware Stack (v1.1.0)
+### Firmware Stack (v2.0.0 - Unified版)
 ```cpp
 // Core Libraries
-#include <M5Stack.h>           // Hardware abstraction
+#include <M5Unified.h>         // 統一API
 #include <WiFi.h>              // Network connectivity
 #include <PubSubClient.h>      // MQTT protocol
 #include <ArduinoJson.h>       // JSON processing
 #include <Preferences.h>       // Non-volatile storage
 
 // Sensor Libraries
-#include <Adafruit_BME280.h>   // Environmental sensor
+#include <VL53L1X.h>           // ToF4M sensor
 #include <TinyGPSPlus.h>       // GPS parsing
-#include "utility/MPU9250.h"   // IMU (M5Stack Fire)
+// IMUはM5Unifiedに内蔵
 
 // Communication Protocols
 MQTT:
-  - Broker: Mosquitto/HiveMQ
+  - Broker: broker.hivemq.com (公開)
+  - Port: 1883
   - Topics:
     - care/sensor/data
     - care/alert
     - care/status
-    - care/command
-  - QoS Level: 1 (At least once)
+    - care/location
+  - QoS Level: 0 (Fire and forget)
   - Keep Alive: 60s
+  - Auto-reconnect: 5s interval
 ```
 
-### Backend Services
+### Backend Services (実装済み)
 ```javascript
 // Node.js Stack
-Express.js:      // REST API framework
-Socket.io:       // Real-time WebSocket
-@line/bot-sdk:   // LINE messaging
-pg:              // PostgreSQL client
-redis:           // Caching layer
-mqtt:            // MQTT client
-winston:         // Logging
-jsonwebtoken:    // Authentication
+Express.js:      // REST API framework ✅
+@line/bot-sdk:   // LINE messaging ✅
+mqtt:            // MQTT client ✅
+dotenv:          // Environment config ✅
+cors:            // CORS support ✅
+
+// backend-line-messaging.jsで統合済み
 ```
 
 ### Database Schema
