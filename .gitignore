@@ -34,6 +34,7 @@ build/
 *.bin
 .vscode/
 .pio/
+config_local.h
 
 # OS Files
 .DS_Store

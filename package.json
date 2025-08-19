@@ -8,7 +8,14 @@
     "dev": "node 04-implementation/backend-server.js",
     "test": "echo \"Tests will be added soon\" && exit 0"
   },
-  "keywords": ["m5stack", "iot", "elderly-care", "mqtt", "healthcare", "monitoring"],
+  "keywords": [
+    "m5stack",
+    "iot",
+    "elderly-care",
+    "mqtt",
+    "healthcare",
+    "monitoring"
+  ],
   "author": "Terada Kousuke",
   "license": "MIT",
   "repository": {
@@ -26,7 +33,7 @@
     "express-rate-limit": "^7.1.5",
     "helmet": "^7.1.0",
     "jsonwebtoken": "^9.0.2",
-    "mqtt": "^5.3.4",
+    "mqtt": "^5.14.0",
     "pg": "^8.11.3",
     "redis": "^4.6.11",
     "socket.io": "^4.8.1",

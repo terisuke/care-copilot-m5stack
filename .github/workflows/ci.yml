@@ -84,16 +84,72 @@ jobs:
     
     - name: Install libraries
       run: |
-        arduino-cli lib install "M5Stack"
+        arduino-cli lib install "M5Unified"
         arduino-cli lib install "PubSubClient"
         arduino-cli lib install "ArduinoJson"
-        arduino-cli lib install "Adafruit BME280 Library"
+        arduino-cli lib install "VL53L1X"
+        arduino-cli lib install "M5Unit-ENV"
         arduino-cli lib install "TinyGPSPlus"
     
     - name: Prepare Arduino sketch
       run: |
         mkdir -p m5stack-firmware
-        cp 04-implementation/m5stack-firmware.ino m5stack-firmware/m5stack-firmware.ino
+        cp 04-implementation/m5stack-fire-unified-all/m5stack-fire-unified-all.ino m5stack-firmware/m5stack-firmware.ino
+        cp 04-implementation/m5stack-fire-unified-all/config.h m5stack-firmware/config.h
+        # Create config_local.h with CI environment values
+        cat > m5stack-firmware/config_local.h << 'EOF'
+        #ifndef CONFIG_LOCAL_H
+        #define CONFIG_LOCAL_H
+        
+        // CI environment dummy values for build test
+        #define WIFI_SSID "CI_TEST_WIFI"
+        #define WIFI_PASSWORD "CI_TEST_PASSWORD"
+        #define MQTT_SERVER "broker.hivemq.com"
+        #define MQTT_PORT 1883
+        #define MQTT_USER ""
+        #define MQTT_PASS ""
+        #define DEVICE_ID "M5_FIRE_ALL_SENSORS"
+        #define FIRMWARE_VERSION "3.0.0"
+        
+        // Alert Thresholds
+        #define FALL_THRESHOLD 2.5
+        #define DISTANCE_NEAR 500
+        #define DISTANCE_FAR 2000
+        #define DISTANCE_MAX 4000
+        #define TEMP_HIGH 35.0
+        #define TEMP_LOW 15.0
+        #define HUMIDITY_HIGH 80.0
+        #define HUMIDITY_LOW 30.0
+        
+        // Timing Settings
+        #define IMU_READ_INTERVAL 100
+        #define TOF_READ_INTERVAL 200
+        #define ENV_READ_INTERVAL 2000
+        #define GPS_READ_INTERVAL 1000
+        #define MQTT_PUBLISH_INTERVAL 5000
+        #define DISPLAY_UPDATE_INTERVAL 1000
+        #define NO_MOTION_TIMEOUT 600000
+        
+        // GPS Configuration
+        #define GPS_BAUD_RATE 9600
+        #define GPS_RX_PIN 16
+        #define GPS_TX_PIN 17
+        
+        // I2C Addresses
+        #define TOF_I2C_ADDR 0x29
+        #define SHT4X_I2C_ADDR 0x44
+        #define BMP280_I2C_ADDR 0x76
+        
+        // Display Settings
+        #define DISPLAY_TEXT_SIZE 2
+        #define DISPLAY_SMALL_TEXT_SIZE 1
+        
+        // Debug Settings
+        #define DEBUG_SERIAL true
+        #define DEBUG_MQTT false
+        
+        #endif // CONFIG_LOCAL_H
+        EOF
     
     - name: Compile firmware
       run: |

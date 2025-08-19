@@ -39,22 +39,43 @@
 
 ## 📅 6日間の詳細スケジュール
 
-### Day 0: 準備日（8/16 夜）
+### Day 0: 準備日（8/16 夜）【✅ 完了】
 ```
-19:00-20:00: ハードウェア注文
-20:00-22:00: 開発環境セットアップ
-- Arduino IDE + M5Stack Libraries
-- Node.js環境構築
-- LINE Developers登録
-- GitHubリポジトリ作成
+19:00-20:00: ハードウェア注文 ✔️
+購入済み:
+- M5Stack Fire (Basic V2.7の代替)
+- ENV IV Unit (ENV III Unitの代替)
+- ToF測距センサーユニット (Ultrasonicの代替)
+- GPSユニットv1.1
+通販注文済み (8/19到着予定):
+- M5StickC Plus2
+- M5Stack用PIRセンサーユニット
+- M5Stack用超音波測距ユニット
+
+20:00-22:00: 開発環境セットアップ ✔️
+- Arduino IDE + M5Stack Libraries ✔️
+- Node.js環境構築 ✔️
+- LINE Developers登録 ✔️
+- GitHubリポジトリ作成 ✔️
+- GitHub Actions CI/CD設定 ✔️
+- Python仮想環境構築 ✔️
 ```
 
-### Day 1: ハードウェア基礎（8/17 土）
+### Day 1: ハードウェア基礎（8/17 土）【🔄 進行中】
 ```
 09:00-12:00: ハードウェア到着・開封・動作確認
+本日使用可能:
+- M5Stack Fire
+- ENV IV Unit (温湿度/気圧センサー)
+- ToF測距センサーユニット (距離測定)
+- GPSユニットv1.1
+
 13:00-17:00: センサー基本動作テスト
-- PIR/超音波/温湿度センサー接続
+- ENV IV Unit接続テスト
+- ToFセンサー接続テスト
+- GPSユニット接続テスト
 - データ取得確認
+
 18:00-20:00: WiFi通信確立
 ```
 

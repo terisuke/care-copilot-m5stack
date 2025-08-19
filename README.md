@@ -1,8 +1,10 @@
 # 🏠 ケア・コパイロット (Care Copilot)
-### 施設内外トータルケアM5Stack IoTシステム
+### M5Stack Fire × M5Unified 高齢者見守りIoTシステム
 
 ![Status](https://img.shields.io/badge/Status-Development-yellow)
 ![Contest](https://img.shields.io/badge/Contest-M5Stack_Global_2025-blue)
+![Platform](https://img.shields.io/badge/Platform-M5Stack_Fire-red)
+![Library](https://img.shields.io/badge/Library-M5Unified-orange)
 ![License](https://img.shields.io/badge/License-MIT-green)
 
 ## 📋 プロジェクト概要
@@ -35,19 +37,48 @@ care-copilot-m5stack/
 │   ├── market-analysis.md   # 市場分析
 │   └── roadmap.md          # 商用化ロードマップ
 │
-└── 03-technical-social-impact/  # 技術と社会的意義
-    ├── technical-spec.md    # 技術仕様書
-    ├── social-impact.md     # 社会的インパクト
-    └── competitors.md       # 競合分析
+├── 03-technical-social-impact/  # 技術と社会的意義
+│   ├── technical-spec.md    # 技術仕様書
+│   ├── social-impact.md     # 社会的インパクト
+│   └── competitors.md       # 競合分析
+│
+└── 04-implementation/       # 実装コード
+    ├── m5stack-fire-basic/  # 基本版（IMUのみ）
+    ├── m5stack-fire-env4/   # ENV4+GPS版
+    ├── m5stack-fire-tof-gps/# ToF+GPS版
+    └── backend-server.js    # バックエンドサーバー
 ```
+
+## 🚀 実装パターン（2種類）
+
+| パターン | センサー構成 | 主な用途 | コスト |
+|---------|-------------|---------|--------|
+| **Basic版** | IMUのみ | プロトタイプ・最小構成 | ¥8,000 |
+| **Unified All版** | IMU+ToF4M+ENV.4+GPS | フル機能・コンテスト対応 | ¥20,000 |
+
+### ✅ 動作確認済み（2025/08/20）
+- **MQTT通信**: broker.hivemq.com経由でリアルタイム送信
+- **LINE通知**: Messaging API統合完了、アラート送信成功
+- **全センサー**: IMU、ToF、ENV.4、GPS全て正常動作
+
+## 🛠️ 開発環境
+
+### Arduino IDE設定
+1. **ボードマネージャーURL追加**:
+   ```
+   https://m5stack.oss-cn-shenzhen.aliyuncs.com/resource/arduino/package_m5stack_index.json
+   ```
+2. **M5Stackボード**をインストール
+3. **M5Unified**ライブラリをインストール
 
 ## 🚀 クイックスタート
 
-### ハードウェア要件（総額: 約18,000円）
-- M5Stack Core2
-- M5StickC Plus2  
-- GPS Module (M5Stack GPS/BDS Unit)
-- PIRセンサー (人感検知)
+### ハードウェア要件
+- **M5Stack Fire** (IMU搭載、LED Bar付き)
+- **オプションセンサー**:
+  - GPS Module (位置追跡用)
+  - PIRセンサー (人感検知)
+  - BME280 (環境センサー)
 - 超音波センサー (距離測定)
 - BME280 (環境センサー)
 
