@@ -117,14 +117,24 @@ ngrok http 3000
 - **位置**: Show GPS location
 - **テスト**: Send test alert
 
-## Project Status (2025/08/20)
+## Project Status (2025/08/20 03:00)
 
-✅ **COMPLETE**: Contest-ready implementation
+🔄 **IN PROGRESS**: 60% completion
+
+### ✅ Completed
 - All sensors integrated and tested
 - LINE Messaging API fully functional
 - Alert system with GPS location
-- Bidirectional communication
-- 95% project completion
+- MQTT communication working
+- Battery life 8+ hours achieved
+
+### ❌ Not Yet Implemented (40%)
+- PostgreSQL database
+- Web dashboard
+- M5StickC Plus2 integration
+- Sleep quality monitoring
+- Daily reports generation
+- QOL analysis
 
 ### Performance Metrics
 - Response time: < 3 seconds
@@ -132,20 +142,68 @@ ngrok http 3000
 - MQTT success rate: 99%
 - Battery life: 8+ hours
 
-## Recent Updates (2025/08/20)
+## Implementation Plan (2025/08/20-21)
 
-- ✅ LINE Messaging API complete integration
-- ✅ Webhook validation successful
-- ✅ Alert notifications with GPS location working
-- ✅ Changed MQTT broker to broker.hivemq.com for stability
-- ✅ Code refactoring and documentation update
-- ✅ Ready for M5Stack Contest 2025 submission
+### August 20 (Remaining 21 hours)
+**03:00-09:00**: PostgreSQL Setup
+- Docker environment
+- Schema creation
+- Node.js connection
 
-## Remaining Tasks
+**09:00-12:00**: Data Persistence
+- Save MQTT data to DB
+- Alert history management
 
-- [ ] Demo video creation (3 minutes)
-- [ ] Hackster.io article
-- [ ] Contest submission form
+**12:00-18:00**: Web Dashboard
+- React/Vue setup
+- Real-time display with Socket.io
+- Charts with Chart.js
+
+**18:00-24:00**: M5StickC Integration
+- Firmware creation
+- Indoor/outdoor mode switching
+
+### August 21 (24 hours)
+**00:00-06:00**: Sleep Analysis
+- Night data collection
+- Pattern analysis
+
+**06:00-12:00**: Report Features
+- Daily report generation
+- QOL evaluation
+- LINE delivery
+
+**12:00-18:00**: Integration Testing
+- Full system test
+- Bug fixes
+- Performance optimization
+
+**18:00-24:00**: Demo Preparation
+- Scenario creation
+- Presentation materials
+
+## Critical Milestones
+
+### August 20, 12:00
+- [ ] PostgreSQL operational
+- [ ] Sensor data saved to DB
+
+### August 20, 18:00
+- [ ] Dashboard basic screen complete
+- [ ] Real-time data display working
+
+### August 21, 12:00
+- [ ] Daily report generation successful
+- [ ] LINE delivery confirmed
+
+### August 21, 24:00
+- [ ] All features integrated
+- [ ] Demo scenario ready
+
+### August 22
+- [ ] Demo video creation
+- [ ] Hackster.io submission
+- [ ] Contest form completion
 
 ## Important Notes
 
