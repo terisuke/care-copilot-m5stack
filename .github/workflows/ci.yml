@@ -89,12 +89,15 @@ jobs:
         arduino-cli lib install "ArduinoJson"
         arduino-cli lib install "VL53L1X"
         arduino-cli lib install "M5Unit-ENV"
-        arduino-cli lib install "TinyGPSPlus-ESP32"
+        arduino-cli lib install "TinyGPSPlus"
     
     - name: Prepare Arduino sketch
       run: |
         mkdir -p m5stack-firmware
         cp 04-implementation/m5stack-fire-unified-all/m5stack-fire-unified-all.ino m5stack-firmware/m5stack-firmware.ino
+        cp 04-implementation/m5stack-fire-unified-all/config.h m5stack-firmware/config.h
+        # Create a default config_local.h for CI
+        cp 04-implementation/m5stack-fire-unified-all/config.h m5stack-firmware/config_local.h
     
     - name: Compile firmware
       run: |
