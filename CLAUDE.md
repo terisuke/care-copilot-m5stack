@@ -8,13 +8,19 @@ This is the Care Copilot M5Stack IoT system - an intelligent monitoring system f
 
 ## Architecture
 
-The system consists of three main components:
+The system has two implementation patterns:
 
-1. **M5Stack Firmware** (`04-implementation/m5stack-firmware.ino`)
-   - ESP32-based IoT device with multi-sensor integration
-   - Intelligent alert filtering based on time and context
-   - MQTT communication for real-time data transmission
-   - Local alert management with offline capabilities
+1. **Basic Version** (`04-implementation/m5stack-fire-basic/`)
+   - M5Stack Fire with M5Unified library
+   - IMU-based fall detection only
+   - Minimal cost (¥8,000), prototype testing
+
+2. **Unified All Version** (`04-implementation/m5stack-fire-unified-all/`)
+   - IMU + ToF4M + ENV.4 + GPS all integrated
+   - Port A: ToF4M + ENV.4 via I2C hub
+   - Port C: GPS module
+   - Full demonstration for M5Stack Contest 2025
+   - Total cost: ¥20,000
 
 2. **Backend Server** (`04-implementation/backend-server.js`)
    - Node.js/Express server with WebSocket support
@@ -30,18 +36,21 @@ The system consists of three main components:
 
 ## Key Technologies
 
-- **Hardware**: M5Stack Core2, M5StickC Plus2, GPS Module, PIR sensor, Ultrasonic sensor, BME280 environmental sensor
+- **Hardware**: M5Stack Fire (IMU + LED Bar), Optional sensors (GPS, PIR, BME280)
+- **Firmware**: M5Unified Library (unified API for M5Stack devices)
 - **Communication**: MQTT, WebSocket, REST API
 - **Database**: PostgreSQL (time-series data), Redis (caching)
 - **Notifications**: LINE Messaging API
-- **Languages**: C++ (Arduino), JavaScript (Node.js), Python (AI/Analytics)
+- **Languages**: C++ (Arduino + M5Unified), JavaScript (Node.js), Python (AI/Analytics)
 
 ## Development Commands
 
 ### Arduino/M5Stack Development
 ```bash
 # Use Arduino IDE 2.0+
-# Board: ESP32 Arduino -> M5Stack-Core-ESP32
+# Board Manager URL: https://m5stack.oss-cn-shenzhen.aliyuncs.com/resource/arduino/package_m5stack_index.json
+# Board: M5Stack -> M5Stack-Fire
+# Library: M5Unified (latest version)
 # Upload Speed: 921600
 # Flash Frequency: 80MHz
 ```
@@ -49,10 +58,15 @@ The system consists of three main components:
 ### Backend Server
 ```bash
 # Install dependencies
+cd 04-implementation
 npm install
 
-# Run development server (no nodemon configured yet)
-node 04-implementation/backend-server.js
+# Run development server
+node backend-server.js
+
+# For M5Stack Fire testing
+# WiFi: 2.4GHz only (5GHz not supported)
+# MQTT Broker: test.mosquitto.org (public test server)
 
 # Environment variables needed in .env:
 # - PORT
@@ -77,7 +91,17 @@ pip install pandas numpy scikit-learn matplotlib requests
 1. **Privacy-First**: No cameras, dignity-preserving monitoring
 2. **Alert Intelligence**: Reduces alert fatigue by 80% through context-aware filtering
 3. **Independence Support**: Enables safe outdoor activities with GPS tracking
-4. **Low Cost**: Total hardware cost under ¥20,000
+4. **Low Cost**: Basic version ¥8,000, Full version ¥20,000
+
+## Hardware Configuration
+
+### I2C Addresses (Port A with hub)
+- ToF4M: 0x29
+- SHT4X (ENV.4): 0x44
+- BMP280 (ENV.4): 0x76
+
+### UART (Port C)
+- GPS: Auto-detect baud rate (115200/38400/9600/57600/4800)
 
 ## Alert Level System
 
@@ -111,4 +135,18 @@ Key tables:
 
 ## Project Status
 
-Currently in MVP development phase for M5Stack Contest submission (deadline: 2025-08-22). The system is designed to demonstrate core functionality with real hardware integration.
+MVP development phase for M5Stack Contest 2025 (deadline: 2025-08-22).
+- ✅ Basic version: Working
+- ✅ Unified All version: ALL SENSORS WORKING!
+  - ToF: Distance measurement confirmed (1991mm)
+  - ENV.4: Temperature/humidity working (31.3°C, 72.4%)
+  - GPS: 13 satellites, location fixed (33.59348, 130.40200)
+- ✅ Backend server: Ready for integration
+
+## Recent Updates (2025/08/19)
+
+- Successfully integrated all sensors in single firmware
+- GPS auto baud rate detection working (115200 bps)
+- I2C hub successfully managing multiple sensors
+- Simplified to 2 clean implementations (Basic + Unified All)
+- Contest-ready demonstration confirmed
