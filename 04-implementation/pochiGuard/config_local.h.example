@@ -1,0 +1,36 @@
+/**
+ * PochiGuard Local Configuration Template
+ * 
+ * 使い方:
+ * 1. このファイルを config_local.h にコピー
+ * 2. 自分の環境に合わせて設定を更新
+ * 3. config_local.h はGitに含まれません
+ */
+
+#ifndef CONFIG_LOCAL_H
+#define CONFIG_LOCAL_H
+
+// ====================================
+// WiFi設定（必須）
+// ====================================
+#define WIFI_SSID "your-wifi-ssid"
+#define WIFI_PASSWORD "your-wifi-password"
+
+// ====================================
+// LINE Messaging API設定（必須）
+// ====================================
+// LINE Developers Console から取得
+// https://developers.line.biz/console/
+#define LINE_CHANNEL_ACCESS_TOKEN "your-line-channel-access-token"
+#define LINE_CHANNEL_SECRET "your-line-channel-secret"
+#define LINE_USER_ID ""  // 友だち追加後に自動取得されます
+
+// ====================================
+// MQTT設定（オプション）
+// ====================================
+#define MQTT_SERVER "broker.hivemq.com"
+#define MQTT_PORT 1883
+#define MQTT_USER ""
+#define MQTT_PASS ""
+
+#endif // CONFIG_LOCAL_H
