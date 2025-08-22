@@ -37,6 +37,20 @@ const char* TOPIC_STATUS = "care/status";
 
 // センサーしきい値はconfig.hで定義
 
+// Pa.HUB v2.1設定
+#define PAHUB_I2C_ADDR 0x70  // Pa.HUBのI2Cアドレス
+#define PAHUB_CH_TOF   0     // ToFセンサー用チャンネル
+#define PAHUB_CH_ENV4  1     // ENV.4センサー用チャンネル
+
+// Pa.HUBチャンネル選択関数
+void selectPaHubChannel(uint8_t channel) {
+    if (channel > 7) return;
+    Wire.beginTransmission(PAHUB_I2C_ADDR);
+    Wire.write(1 << channel);
+    Wire.endTransmission();
+    delay(10);  // チャンネル切り替え待機
+}
+
 // グローバル変数
 WiFiClient espClient;
 PubSubClient mqtt(espClient);
@@ -123,18 +137,31 @@ void setup() {
     M5.Display.println("ALL SENSORS");
     M5.Display.println("Initializing...");
     
-    // I2C初期化（Port A - ToFとENV.4共用）
-    Serial.println("\nInitializing I2C sensors on Port A...");
+    // I2C初期化（Port A - Pa.HUB v2.1経由でToFとENV.4を接続）
+    Serial.println("\nInitializing I2C with Pa.HUB v2.1 on Port A...");
     Wire.begin(21, 22);  // Port A (SDA=21, SCL=22)
     delay(100);
     
-    // ToF4Mセンサー初期化
-    Serial.println("Initializing ToF sensor...");
-    M5.Display.println("\nToF init...");
+    // Pa.HUBの接続確認
+    Serial.println("Checking Pa.HUB connection...");
+    Wire.beginTransmission(PAHUB_I2C_ADDR);
+    uint8_t pahub_error = Wire.endTransmission();
+    if (pahub_error == 0) {
+        Serial.println("Pa.HUB v2.1 detected at 0x70");
+        M5.Display.println("Pa.HUB: OK");
+    } else {
+        Serial.println("Pa.HUB not found! Error: " + String(pahub_error));
+        M5.Display.println("Pa.HUB: Not found!");
+    }
     
+    // ToF4Mセンサー初期化（Pa.HUBチャンネル0）
+    Serial.println("\nInitializing ToF sensor on Pa.HUB CH0...");
+    M5.Display.println("ToF init (CH0)...");
+    
+    selectPaHubChannel(PAHUB_CH_TOF);  // チャンネル0を選択
     tof_sensor.setTimeout(500);
     if (!tof_sensor.init()) {
-        Serial.println("ToF sensor not found (I2C: 0x29)");
+        Serial.println("ToF sensor not found on CH0 (I2C: 0x29)");
         M5.Display.println("ToF: Not found");
         systemState.tofConnected = false;
     } else {
@@ -142,36 +169,38 @@ void setup() {
         tof_sensor.setDistanceMode(VL53L1X::Long);
         tof_sensor.setMeasurementTimingBudget(50000);
         tof_sensor.startContinuous(50);
-        Serial.println("ToF sensor OK - Long range mode");
+        Serial.println("ToF sensor OK on CH0 - Long range mode");
         systemState.tofConnected = true;
     }
     
-    // ENV.4センサー初期化
-    Serial.println("\nInitializing ENV.4 sensors...");
-    M5.Display.println("ENV.4 init...");
+    // ENV.4センサー初期化（Pa.HUBチャンネル1）
+    Serial.println("\nInitializing ENV.4 sensors on Pa.HUB CH1...");
+    M5.Display.println("ENV.4 init (CH1)...");
+    
+    selectPaHubChannel(PAHUB_CH_ENV4);  // チャンネル1を選択
     
     // SHT4X（温湿度）初期化
     if (!sht4.begin(&Wire, SHT40_I2C_ADDR_44, 21, 22, 400000U)) {
-        Serial.println("SHT4X not found (I2C: 0x44)");
+        Serial.println("SHT4X not found on CH1 (I2C: 0x44)");
         M5.Display.println("ENV.4: Not found");
         systemState.env4Connected = false;
     } else {
         sht4.setPrecision(SHT4X_HIGH_PRECISION);
         sht4.setHeater(SHT4X_NO_HEATER);
-        Serial.println("SHT4X OK (I2C: 0x44)");
+        Serial.println("SHT4X OK on CH1 (I2C: 0x44)");
         systemState.env4Connected = true;
     }
     
-    // BMP280（気圧）初期化
+    // BMP280（気圧）初期化（同じチャンネル1）
     if (!bmp.begin(&Wire, BMP280_I2C_ADDR, 21, 22, 400000U)) {
-        Serial.println("BMP280 not found (I2C: 0x76)");
+        Serial.println("BMP280 not found on CH1 (I2C: 0x76)");
     } else {
         bmp.setSampling(BMP280::MODE_NORMAL,
                        BMP280::SAMPLING_X2,
                        BMP280::SAMPLING_X16,
                        BMP280::FILTER_X16,
                        BMP280::STANDBY_MS_500);
-        Serial.println("BMP280 OK (I2C: 0x76)");
+        Serial.println("BMP280 OK on CH1 (I2C: 0x76)");
     }
     
     // GPS初期化（Port C）
@@ -351,6 +380,7 @@ void readIMU() {
 void readToF() {
     if (!systemState.tofConnected) return;
     
+    selectPaHubChannel(PAHUB_CH_TOF);  // ToFチャンネルを選択
     sensorData.distance = tof_sensor.read();
     sensorData.rangeStatus = tof_sensor.ranging_data.range_status;
     
@@ -382,6 +412,8 @@ void readToF() {
 
 void readEnv4() {
     if (!systemState.env4Connected) return;
+    
+    selectPaHubChannel(PAHUB_CH_ENV4);  // ENV.4チャンネルを選択
     
     // 温湿度読み取り
     if (sht4.update()) {
@@ -880,7 +912,8 @@ void showDetailedInfo() {
     M5.Display.println("WiFi RSSI: " + String(WiFi.RSSI()) + " dBm");
     M5.Display.println("Uptime: " + String(millis()/1000) + " s");
     M5.Display.println("\nI2C Addresses:");
-    M5.Display.println("ToF: 0x29, SHT4X: 0x44, BMP: 0x76");
+    M5.Display.println("Pa.HUB: 0x70");
+    M5.Display.println("ToF(CH0): 0x29, ENV4(CH1): 0x44/0x76");
     
     M5.Display.println("\nPress any button to return");
     M5.Display.setTextSize(2);
